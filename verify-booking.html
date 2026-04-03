@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify Booking</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f3f4f6;
+      padding: 30px 10px;
+      margin: 0;
+    }
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 30px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    .form-row {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      background: #10b981;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #loading {
+      padding: 20px 0;
+      text-align: center;
+      display: none;
+    }
+    #booking-details {
+      display: none;
+      margin-top: 20px;
+    }
+    #error {
+      display: none;
+      color: #ef4444;
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div style="text-align:center;margin-bottom:30px;">
+      <h2>🔍 Verify Booking</h2>
+      <p>Enter details to view your camper van reservation</p>
+    </div>
+    
+    <div id="form-section">
+      <div class="form-row">
+        <label>Booking Number</label>
+        <input id="booking-input" type="text" placeholder="e.g. 4018">
+      </div>
+      <div class="form-row">
+        <label>Last Name</label>
+        <input id="lastname-input" type="text" placeholder="e.g. Smith">
+      </div>
+      <button id="verify-btn">Verify Booking</button>
+    </div>
+    
+    <div id="loading">🔍 Loading...</div>
+    <div id="booking-details"></div>
+    <div id="error"></div>
+  </div>
+
+  <script>
+    document.getElementById('verify-btn').onclick = async function(e) {
+      e.preventDefault();
+      
+      const bookingNum = document.getElementById('booking-input').value.trim();
+      const lastName = document.getElementById('lastname-input').value.trim();
+      
+      if (!bookingNum || !lastName) {
+        document.getElementById('error').innerHTML = 'Please enter both fields';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('form-section').style.display = 'block';
+        return;
+      }
+      
+      document.getElementById('form-section').style.display = 'none';
+      document.getElementById('loading').style.display = 'block';
+      
+      try {
+        const response = await fetch('https://cloud.activepieces.com/api/v1/webhooks/PWGPbbTKKaJUE470aVwLy', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({bookingNum, lastName})
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          const data = result.data;
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('booking-details').style.display = 'block';
+          document.getElementById('booking-details').innerHTML = `
+            <div style="background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:30px;border-radius:20px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.2);">
+              <h2 style="margin:0 0 20px 0;">✅ Booking Verified!</h2>
+              <div style="background:rgba(255,255,255,0.15);padding:15px 20px;border-radius:15px;">
+                <h3 style="margin:0 0 10px 0;font-size:18px;">#${data.bookingNum || 'N/A'} - ${data.lastName || 'N/A'}</h3>
+                <div style="font-size:14px;">
+                  Reference: ${data.ref || 'N/A'}<br>
+                  Status: ${data.status || 'Active'}<br>
+                  Balance Due: ${data.balanceDue || 'N/A'}<br>
+                  Total: ${data.totalAmount || 'N/A'}<br>
+                  Pickup: ${data.pickupDate || 'N/A'}<br>
+                  Location: ${data.pickupLocation || 'N/A'}<br>
+                  Drop‑off: ${data.dropoffDate || 'N/A'}<br>
+                  Drop‑off Location: ${data.dropoffLocation || 'N/A'}<br>
+                  Type: ${data.vehicleCategory || 'N/A'}<br>
+                  Fleet No: ${data.vehicleFleetNumber || 'N/A'}
+                </div>
+              </div>
+              <div style="margin-top:15px;color:#ffffff80;font-size:13px;text-align:center;">
+                If these details are correct, press <strong>Next</strong> in the survey.<br>
+                For wrong details please contact <a href="mailto:support@wakacampa.com" style="color:#fff;text-decoration:underline;">support@wakacampa.com</a>
+              </div>
+            </div>
+          `;
+        } else {
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('error').innerHTML = `
+            <div style="font-size:18px;">
+              ❌ ${result.message || 'Booking not found'}
+              <br><small>Contact <a href="mailto:support@wakacampa.com" style="color:#ef4444;text-decoration:underline;">support@wakacampa.com</a> if correct</small>
+            </div>
+            <button onclick="document.getElementById('form-section').style.display='block';document.getElementById('error').style.display='none';" style="margin-top:15px;padding:10px 20px;background:#6b7280;color:white;border:none;border-radius:6px;">
+              Try Again
+            </button>
+          `;
+          document.getElementById('error').style.display = 'block';
+        }
+      } catch(error) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').innerHTML = `
+          <div style="font-size:18px;">
+            ❌ Connection error - try again
+            <br><small>Or contact support</small>
+          </div>
+          <button onclick="document.getElementById('form-section').style.display='block';document.getElementById('error').style.display='none';" style="margin-top:15px;padding:10px 20px;background:#6b7280;color:white;border:none;border-radius:6px;">
+            Try Again
+          </button>
+        `;
+        document.getElementById('error').style.display = 'block';
+        console.error('Webhook error:', error);
+      }
+    };
+  </script>
+</body>
+</html>
