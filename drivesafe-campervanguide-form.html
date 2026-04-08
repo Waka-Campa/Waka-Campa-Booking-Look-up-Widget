@@ -23,24 +23,28 @@
 
   <div id="loading" style="display:none;padding:20px;text-align:center;color:#000;font-family:'DM Sans',Arial,sans-serif;">🔍 Searching Reservation....</div>
   <div id="booking-details" style="display:none;font-family:'DM Sans',Arial,sans-serif;"></div>
+  <div id="confirmation-buttons" style="display:none;padding:20px;text-align:center;font-family:'DM Sans',Arial,sans-serif;"></div>
   <div id="error" style="display:none;color:#ef4444;text-align:center;padding:20px;font-family:'DM Sans',Arial,sans-serif;"></div>
   
-  <!-- Iframe container for next survey -->
-  <div id="survey-iframe-container" style="display:none;margin-top:20px;">
-    <iframe id="survey-iframe" src="" style="border:none;width:100%;height:700px;" scrolling="no" title="Driver Info Survey"></iframe>
-  </div>
+  <!-- Iframe container for survey -->
+  <div id="survey-iframe-container" style="display:none;width:100%;border:none;"></div>
 </div>
 
 <script>
+let currentBookingNum = '';
+let currentLastName = '';
+let currentOpportunityId = '';
+
 document.getElementById('verify-btn').onclick = async function(e) {
   e.preventDefault();
-
-  const bookingNum = document.getElementById('booking-input').value.trim();
-  const lastName = document.getElementById('lastname-input').value.trim().toLowerCase();
-
-  if (!bookingNum || !lastName) {
+  
+  currentBookingNum = document.getElementById('booking-input').value.trim();
+  currentLastName = document.getElementById('lastname-input').value.trim().toLowerCase();
+  
+  if (!currentBookingNum || !currentLastName) {
     document.getElementById('error').innerHTML = 'Please enter both fields';
     document.getElementById('error').style.display = 'block';
+    document.getElementById('form-section').style.display = 'block';
     return;
   }
 
@@ -48,13 +52,14 @@ document.getElementById('verify-btn').onclick = async function(e) {
   document.getElementById('loading').style.display = 'block';
   document.getElementById('error').style.display = 'none';
   document.getElementById('booking-details').style.display = 'none';
+  document.getElementById('confirmation-buttons').style.display = 'none';
   document.getElementById('survey-iframe-container').style.display = 'none';
 
   try {
     const response = await fetch('https://cloud.activepieces.com/api/v1/webhooks/PWGPbbTKKaJUE470aVwLy/sync', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({bookingNum, lastName})
+      body: JSON.stringify({bookingNum: currentBookingNum, lastName: currentLastName})
     });
 
     let result;
@@ -68,72 +73,148 @@ document.getElementById('verify-btn').onclick = async function(e) {
 
     if (result.success && result.data) {
       const data = result.data;
-      document.getElementById('opportunity-id').value = data.opportunityId || '';
+      
+      // Store opportunity ID
+      currentOpportunityId = data.opportunityId || '';
+      document.getElementById('opportunity-id').value = currentOpportunityId;
 
-      // Display booking details with buttons
-      let html = `
-        <div style="background:#fff;color:#000;padding:30px;border-radius:20px;text-align:left;box-shadow:0 20px 40px rgba(0,0,0,0.2);font-family:'DM Sans',Arial,sans-serif;">
-          <h2 style="margin:0 0 20px 0;text-align:center"><strong>Booking # ${data.bookingNum || 'N/A'}</strong></h2>
-          <div style="border-bottom:1px solid #ddd;margin:0 0 20px 0;"></div>
-          <div style="margin-bottom:20px;">
-            <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Booking Details</u></strong></h4>
-            <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
-              <div><strong>Status:</strong> ${data.reservationStatus || 'N/A'}</div>
-              <div><strong>Number of Days:</strong> ${data.numberOfDays || 'N/A'}</div>
-              <div><strong>Pickup Date:</strong> ${data.pickupDate || 'N/A'}</div>
-              <div><strong>Pickup Time:</strong> ${data.pickupTime || 'N/A'}</div>
-              <div><strong>Pickup Location:</strong> ${data.pickupLocation || 'N/A'}</div>
-              <div><strong>Dropoff Date:</strong> ${data.dropoffDate || 'N/A'}</div>
-              <div><strong>Dropoff Time:</strong> ${data.dropoffTime || 'N/A'}</div>
-              <div><strong>Dropoff Location:</strong> ${data.dropoffLocation || 'N/A'}</div>
-              <div><strong>Total Cost:</strong> ${data.totalCost || 'N/A'}</div>
-              <div><strong>Balance Due:</strong> ${data.totalBalanceDue || 'N/A'}</div>
-            </div>
-          </div>
-          <div style="text-align:center;margin-top:20px;">
-            <button id="details-correct" style="margin-right:10px;padding:12px 20px;background:#22c55e;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;">Details are correct</button>
-            <button id="details-incorrect" style="padding:12px 20px;background:#ef4444;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer;">Details are incorrect (contact support)</button>
+      // COMPLETE booking details display (your original beautiful design)
+      let html = `<div style="background:#fff;color:#000;padding:30px;border-radius:20px;text-align:left;box-shadow:0 20px 40px rgba(0,0,0,0.2);font-family:'DM Sans',Arial,sans-serif;">
+        <h2 style="margin:0 0 20px 0;text-align:center"><strong>Booking # ${data.bookingNum || 'N/A'}</strong></h2>
+        <div style="border-bottom:1px solid #ddd;margin:0 0 20px 0;"></div>
+        
+        <div style="margin-bottom:20px;">
+          <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Booking Details</u></strong></h4>
+          <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
+            <div><strong>Status:</strong> ${data.reservationStatus || 'N/A'}</div>
+            <div><strong>Number of Days:</strong> ${data.numberOfDays || 'N/A'}</div>
+            <div><strong>Pickup Date:</strong> ${data.pickupDate || 'N/A'}</div>
+            <div><strong>Pickup Time:</strong> ${data.pickupTime || 'N/A'}</div>
+            <div><strong>Pickup Location:</strong> ${data.pickupLocation || 'N/A'}</div>
+            <div><strong>Dropoff Date:</strong> ${data.dropoffDate || 'N/A'}</div>
+            <div><strong>Dropoff Time:</strong> ${data.dropoffTime || 'N/A'}</div>
+            <div><strong>Dropoff Location:</strong> ${data.dropoffLocation || 'N/A'}</div>
+            <div><strong>Total Cost:</strong> ${data.totalCost || 'N/A'}</div>
+            <div><strong>Balance Due:</strong> ${data.totalBalanceDue || 'N/A'}</div>
+            <div><strong>Opportunity ID:</strong> ${data.opportunityId || '—'}</div>
           </div>
         </div>
-      `;
+        <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
+        
+        <div style="margin-bottom:20px;">
+          <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Contact Details</u></strong></h4>
+          <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
+            <div><strong>Hirer Full Name:</strong> ${data.hirerFullName || 'N/A'}</div>
+            <div><strong>Email:</strong> ${data.hirerEmail || 'N/A'}</div>
+            <div><strong>Phone:</strong> ${data.hirerPhone || 'N/A'}</div>`;
 
+      if (data.additionalPhone) {
+        html += `<div><strong>Additional Phone:</strong> ${data.additionalPhone}</div>`;
+      }
+      
+      html += `</div></div><div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>`;
+
+      // Driver info section
+      const hasDriverInfo = data.driverName || data.driverLicenseNumber;
+      if (hasDriverInfo) {
+        html += `<div style="margin-bottom:20px;">
+          <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Driver's Information</u></strong></h4>
+          <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">`;
+        if (data.driverName) html += `<div><strong>Driver's Full Name:</strong> ${data.driverName}</div>`;
+        if (data.driverLicenseNumber) html += `<div><strong>Driver's License Number:</strong> ${data.driverLicenseNumber}</div>`;
+        html += `</div></div><div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>`;
+      }
+
+      // Vehicle info section
+      const hasVehicleInfo = data.vehicleCategory || data.vehicleFleetNumber;
+      if (hasVehicleInfo) {
+        html += `<div style="margin-bottom:20px;">
+          <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Vehicle Details</u></strong></h4>
+          <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">`;
+        if (data.vehicleCategory) html += `<div><strong>Vehicle Type:</strong> ${data.vehicleCategory}</div>`;
+        if (data.vehicleFleetNumber) html += `<div><strong>Vehicle Fleet Number:</strong> ${data.vehicleFleetNumber}</div>`;
+        html += `<div><strong>Vehicle Registration Number:</strong> N/A</div></div></div>`;
+      }
+      
+      html += `</div>`;
+      
       document.getElementById('booking-details').innerHTML = html;
       document.getElementById('booking-details').style.display = 'block';
 
-      // Button actions
-      document.getElementById('details-correct').onclick = function() {
-        const surveyURL = `https://api.leadconnectorhq.com/widget/survey/hguGjV9kDYPzFtYLdtUI?booking_number=${encodeURIComponent(data.bookingNum)}&last_name=${encodeURIComponent(data.lastName)}`;
-        const iframeContainer = document.getElementById('survey-iframe-container');
-        const iframe = document.getElementById('survey-iframe');
-        iframe.src = surveyURL;
-        iframeContainer.style.display = 'block';
-        iframe.scrollIntoView({behavior: 'smooth'});
-        // Embed Msgsndr script
-        const script = document.createElement('script');
-        script.src = "https://link.msgsndr.com/js/form_embed.js";
-        document.body.appendChild(script);
-      };
-
-      document.getElementById('details-incorrect').onclick = function() {
-        window.location.href = "mailto:support@wakacampa.com?subject=Booking%20Issue&body=Booking%20Number:%20" + encodeURIComponent(data.bookingNum) + "%0ALast%20Name:%20" + encodeURIComponent(data.lastName);
-      };
+      // Show BEAUTIFUL confirmation buttons (your original design)
+      document.getElementById('confirmation-buttons').style.display = 'block';
+      document.getElementById('confirmation-buttons').innerHTML = `
+        <div style="margin-bottom:15px;">
+          <button id="details-correct" style="width:48%;padding:12px;background:radial-gradient(circle 80px at 50% 70%, #22c55e, #16a34a);color:#fff;border:2px solid #fff;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;font-family:'DM Sans',Arial,sans-serif;margin-right:4%;" onclick="handleDetailsCorrect()">✓ Details are correct</button>
+          <button id="details-incorrect" style="width:48%;padding:12px;background:radial-gradient(circle 80px at 50% 70%, #ef4444, #dc2626);color:#fff;border:2px solid #fff;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;font-family:'DM Sans',Arial,sans-serif;margin-left:4%;" onclick="handleDetailsIncorrect()">✗ Details are incorrect</button>
+        </div>
+        <button onclick="resetForm()" style="width:100%;padding:10px;background:radial-gradient(circle 80px at 50% 70%, #6b7280, #4b5563);color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;font-size:14px;">Look up different booking</button>
+      `;
 
     } else {
+      document.getElementById('error').innerHTML = `<div style="font-size:18px;"> ❌ ${result.message || 'Booking not found'} <br><small>Contact <a href="mailto:support@wakacampa.com" style="color:#0000FF;text-decoration:underline;">support@wakacampa.com</a> if you think this is correct</small> </div> <button onclick="resetForm()" style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;"> Try Again </button>`;
       document.getElementById('error').style.display = 'block';
-      document.getElementById('error').innerHTML = `❌ ${result.message || 'Booking not found'}`;
       document.getElementById('form-section').style.display = 'block';
     }
 
   } catch(error) {
-    console.error(error);
+    console.error('Webhook error:', error);
     document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').innerHTML = `<div style="font-size:18px;"> ❌ Connection error - try again <br><small>Or contact support</small> </div> <button onclick="resetForm()" style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;"> Try Again </button>`;
     document.getElementById('error').style.display = 'block';
-    document.getElementById('error').innerHTML = `❌ Connection error - try again`;
     document.getElementById('form-section').style.display = 'block';
   }
 };
+
+// WORKING PREFILL METHOD (from your version that works)
+function handleDetailsCorrect() {
+  document.getElementById('booking-details').style.display = 'none';
+  document.getElementById('confirmation-buttons').style.display = 'none';
+  
+  // Load Msgsndr script first
+  const script = document.createElement('script');
+  script.src = "https://link.msgsndr.com/js/form_embed.js";
+  script.onload = function() {
+    // WORKING URL PREFILL (your method)
+    const surveyURL = `https://api.leadconnectorhq.com/widget/survey/hguGjV9kDYPzFtYLdtUI?booking_number=${encodeURIComponent(currentBookingNum)}&last_name=${encodeURIComponent(currentLastName)}`;
+    
+    const iframeContainer = document.getElementById('survey-iframe-container');
+    const iframe = document.createElement('iframe');
+    iframe.id = 'survey-iframe';
+    iframe.src = surveyURL;
+    iframe.style.border = 'none';
+    iframe.style.width = '100%';
+    iframe.style.height = '700px';
+    iframe.scrolling = 'no';
+    iframe.title = 'Driver Info Survey';
+    
+    iframeContainer.innerHTML = '';
+    iframeContainer.appendChild(iframe);
+    iframeContainer.style.display = 'block';
+    iframe.scrollIntoView({behavior: 'smooth'});
+  };
+  document.body.appendChild(script);
+}
+
+function handleDetailsIncorrect() {
+  window.location.href = `mailto:support@wakacampa.com?subject=Booking%20Verification%20Issue%20-%20${currentBookingNum}&body=Hi%20Support,%0A%0AI%20have%20a%20problem%20with%20booking%20#${currentBookingNum}.%0AThe%20details%20shown%20are%20incorrect.%0A%0APlease%20help.%0A%0AThanks!`;
+}
+
+function resetForm() {
+  document.getElementById('form-section').style.display = 'block';
+  document.getElementById('error').style.display = 'none';
+  document.getElementById('booking-details').style.display = 'none';
+  document.getElementById('confirmation-buttons').style.display = 'none';
+  document.getElementById('survey-iframe-container').style.display = 'none';
+  document.getElementById('survey-iframe-container').innerHTML = '';
+  currentBookingNum = '';
+  currentLastName = '';
+  currentOpportunityId = '';
+  document.getElementById('booking-input').value = '';
+  document.getElementById('lastname-input').value = '';
+}
 </script>
 
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
 </style>
