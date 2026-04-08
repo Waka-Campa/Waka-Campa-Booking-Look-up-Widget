@@ -1,4 +1,4 @@
-<!-- OUTER WRAPPER FOR CENTERING -->
+<!-- OUTER WRAPPER -->
 <div style="
   min-height:100vh;
   display:flex;
@@ -19,13 +19,13 @@
   <div id="form-section"> 
     <div style="margin-bottom:20px;"> 
       <p style="margin-bottom:15px;font-size:16px;text-align:center;"><strong>Please enter reservation details</strong></p> 
-      <label style="display:block;margin-bottom:5px;color:#000;">Booking Number</label> 
-      <input id="booking-input" type="text" placeholder="e.g. 4020" style="width:100%;padding:12px;border:2px solid #bdbdbd;background:#e0e0e0;color:#000;border-radius:8px;font-size:16px;"> 
+      <label style="display:block;margin-bottom:5px;">Booking Number</label> 
+      <input id="booking-input" type="text" placeholder="e.g. 4020" style="width:100%;padding:12px;border:2px solid #bdbdbd;background:#e0e0e0;border-radius:8px;font-size:16px;"> 
     </div> 
 
     <div style="margin-bottom:25px;"> 
-      <label style="display:block;margin-bottom:5px;color:#000;">Last Name</label> 
-      <input id="lastname-input" type="text" placeholder="e.g. Lucero" style="width:100%;padding:12px;border:2px solid #bdbdbd;background:#e0e0e0;color:#000;border-radius:8px;font-size:16px;"> 
+      <label style="display:block;margin-bottom:5px;">Last Name</label> 
+      <input id="lastname-input" type="text" placeholder="e.g. Lucero" style="width:100%;padding:12px;border:2px solid #bdbdbd;background:#e0e0e0;border-radius:8px;font-size:16px;"> 
     </div> 
 
     <button id="verify-btn" type="button" style="width:100%;padding:15px;background:radial-gradient(circle 300px at 50% 70%, #444, #000);color:#fff;border:2px solid #fff;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;">Submit</button> 
@@ -101,31 +101,89 @@ function handleDetailsCorrect() {
   document.getElementById('booking-details').style.display = 'none';
   document.getElementById('confirmation-buttons').style.display = 'none';
 
-  const surveyContainer = document.getElementById('survey-iframe');
+  const container = document.getElementById('survey-iframe');
 
-  // Inject iframe with prefill params
-  surveyContainer.innerHTML = `
+  container.innerHTML = `
     <iframe 
       src="https://api.leadconnectorhq.com/widget/survey/HRnCawqi4cNodd48rYv0?booking_number=${encodeURIComponent(currentBookingNum)}&last_name=${encodeURIComponent(currentLastName)}"
       style="border:none;width:100%;height:${window.innerWidth < 600 ? '80vh' : '600px'};"
       scrolling="no"
-      id="HRnCawqi4cNodd48rYv0"
+      id="surveyFrame"
       title="survey">
     </iframe>
   `;
 
-  surveyContainer.style.display = 'block';
+  container.style.display = 'block';
 
-  // Load script only once
   if (!document.querySelector('script[src="https://link.msgsndr.com/js/form_embed.js"]')) {
     const script = document.createElement('script');
     script.src = 'https://link.msgsndr.com/js/form_embed.js';
     document.body.appendChild(script);
   }
+
+  // Detect submission
+  let checkCount = 0;
+  const interval = setInterval(() => {
+    const iframe = document.getElementById('surveyFrame');
+
+    if (!iframe) return;
+
+    try {
+      const url = iframe.contentWindow.location.href;
+      if (url.includes('thank') || url.includes('success')) {
+        clearInterval(interval);
+        showThankYouScreen();
+      }
+    } catch (e) {}
+
+    checkCount++;
+    if (checkCount > 120) clearInterval(interval);
+  }, 1000);
+
+  document.getElementById('surveyFrame').addEventListener('load', () => {
+    if (checkCount > 3) {
+      showThankYouScreen();
+    }
+  });
+}
+
+function showThankYouScreen() {
+  const container = document.getElementById('survey-iframe');
+
+  let countdown = 3;
+
+  container.innerHTML = `
+    <div style="text-align:center;padding:40px;">
+      <h2>✅ Submission Successful</h2>
+      <p>Thank you! You're all set.</p>
+      <p style="font-size:14px;color:#555;">Redirecting in <span id="countdown">${countdown}</span>...</p>
+    </div>
+  `;
+
+  const interval = setInterval(() => {
+    countdown--;
+    document.getElementById('countdown').innerText = countdown;
+
+    if (countdown <= 0) {
+      clearInterval(interval);
+      resetForm();
+    }
+  }, 1000);
 }
 
 function resetForm() {
-  location.reload();
+  document.getElementById('form-section').style.display = 'block';
+  document.getElementById('error').style.display = 'none';
+  document.getElementById('booking-details').style.display = 'none';
+  document.getElementById('confirmation-buttons').style.display = 'none';
+  document.getElementById('survey-iframe').style.display = 'none';
+  document.getElementById('loading').style.display = 'none';
+
+  document.getElementById('booking-input').value = '';
+  document.getElementById('lastname-input').value = '';
+
+  currentBookingNum = '';
+  currentLastName = '';
 }
 </script> 
 
