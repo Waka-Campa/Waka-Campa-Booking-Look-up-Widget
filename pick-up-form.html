@@ -169,17 +169,18 @@ document.getElementById('verify-btn').onclick = async function(e) {
       // Show confirmation buttons
       document.getElementById('confirmation-buttons').style.display = 'block';
       document.getElementById('confirmation-buttons').innerHTML = `
-        <div style="margin-bottom:15px;">
-          <button id="details-correct" style="width:48%;padding:12px;background:radial-gradient(circle 80px at 50% 70%, #22c55e, #16a34a);color:#fff;border:2px solid #fff;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;font-family:'DM Sans',Arial,sans-serif;margin-right:4%;" onclick="handleDetailsCorrect()">
+        <div style="display:flex; justify-content:center; gap:16px; margin-bottom:15px;">
+          <button id="details-correct" 
+            style="flex:1; max-width:200px; padding:12px; text-align:center; background:radial-gradient(circle 80px at 50% 70%, #22c55e, #16a34a); color:#fff; border:2px solid #fff; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; font-family:'DM Sans',Arial,sans-serif;"
+            onclick="handleDetailsCorrect()">
             ✓ Details are correct
           </button>
-          <button id="details-incorrect" style="width:48%;padding:12px;background:radial-gradient(circle 80px at 50% 70%, #ef4444, #dc2626);color:#fff;border:2px solid #fff;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;font-family:'DM Sans',Arial,sans-serif;margin-left:4%;" onclick="window.location.href='mailto:support@wakacampa.com?subject=Booking%20Verification%20Issue%20-%20${currentBookingNum}&body=Hi%20Support,%0A%0AI%20have%20a%20problem%20with%20booking%20#${currentBookingNum}.%0AThe%20details%20shown%20are%20incorrect.%0A%0APlease%20help.%0A%0AThanks!';">
+          <button id="details-incorrect" 
+            style="flex:1; max-width:200px; padding:12px; text-align:center; background:radial-gradient(circle 80px at 50% 70%, #ef4444, #dc2626); color:#fff; border:2px solid #fff; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; font-family:'DM Sans',Arial,sans-serif;"
+            onclick="window.location.href='mailto:support@wakacampa.com?subject=Booking%20Verification%20Issue%20-%20${currentBookingNum}&body=Hi%20Support,%0A%0AI%20have%20a%20problem%20with%20booking%20#${currentBookingNum}.%0AThe%20details%20shown%20are%20incorrect.%0A%0APlease%20help.%0A%0AThanks!';">
             ✗ Details are incorrect
           </button>
         </div>
-        <button onclick="resetForm()" style="width:100%;padding:10px;background:radial-gradient(circle 80px at 50% 70%, #6b7280, #4b5563);color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;font-size:14px;">
-          Look up different booking
-        </button>
       `;
 
     } else {
