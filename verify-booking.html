@@ -25,7 +25,7 @@
 
 <script>
 document.getElementById('verify-btn-support').onclick = async function(e) {
-  e.preventDefault();  // ← Prevent any GHL form auto‑submit
+  e.preventDefault();
 
   const bookingNum  = document.getElementById('booking-input-support').value.trim();
   const lastName    = document.getElementById('lastname-input-support').value.trim().toLowerCase();
@@ -41,7 +41,6 @@ document.getElementById('verify-btn-support').onclick = async function(e) {
   document.getElementById('loading-support').style.display = 'block';
 
   try {
-    // same webhook as before
     const response = await fetch('https://cloud.activepieces.com/api/v1/webhooks/PWGPbbTKKaJUE470aVwLy/sync', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
@@ -66,15 +65,7 @@ document.getElementById('verify-btn-support').onclick = async function(e) {
             ❌ Booking not found
             <br><small>Contact <a href="mailto:support@wakacampa.com" style="color:#0000FF;text-decoration:underline;">support@wakacampa.com</a> if you think this is correct</small>
           </div>
-          <button onclick="
-            document.getElementById('form-section-support').style.display='block';
-            document.getElementById('error-support').style.display='none';
-            document.getElementById('booking-details-support').style.display='none';
-            document.getElementById('loading-support').style.display='none';
-            document.getElementById('booking-input-support').value='';
-            document.getElementById('lastname-input-support').value='';
-          "
-          style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;">
+          <button onclick="location.reload();" style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;">
             Check Another Booking
           </button>
         `;
@@ -84,91 +75,118 @@ document.getElementById('verify-btn-support').onclick = async function(e) {
       document.getElementById('loading-support').style.display = 'none';
       document.getElementById('booking-details-support').style.display = 'block';
 
-      // --- Build full support view (all fields always shown) ---
+      // Pipeline stage mapping
+      const pipelineStages = {
+        'c7a0cc79-44be-4215-a5ca-4e6821b78637': 'Quote Sent',
+        '3cc07045-5fe7-4a92-ae7d-1720d40e8835': 'Booking Requested',
+        '67c93bad-f330-4686-96e2-05455888c9d5': 'Confirmed Booking',
+        'e0ca8109-feb1-437c-9aa0-747ef513cb8a': 'Booking Balance Paid',
+        '77e24848-fb4c-47f0-89dc-17200cf1e0b9': 'Booking Pending Task',
+        '5d152c73-bc39-4ce8-9896-44663200d352': 'Pickup Ready',
+        '19994bf6-30a7-4648-b93d-2a34f070533f': 'On Road',
+        '64217e5d-27ce-4a86-adbb-9ec03c67dd2b': 'Returned',
+        '9a145124-5fda-4ba3-9248-8585bf389ea9': 'Lost'
+      };
+
+      const pipelineStageName = pipelineStages[data.pipelineStageId] || data.pipelineStageId || '—';
+
+      // Generate GHL Opportunity Link (with tab query)
+      const ghlBaseUrl = 'https://app.gohighlevel.com/v2/location/va82O7V3l50t4My9T2zQ/opportunities/list/';
+      const ghlOpportunityLink = data.opportunityId ? `${ghlBaseUrl}${data.opportunityId}?tab=Opportunity+Details` : null;
+
       let html = `
         <div style="background:#fff;color:#000;padding:30px;border-radius:20px;text-align:left;box-shadow:0 20px 40px rgba(0,0,0,0.2);font-family:'DM Sans',Arial,sans-serif;">
           <h2 style="margin:0 0 20px 0;text-align:center"><strong>Booking # ${data.bookingNum || 'N/A'}</strong></h2>
           <div style="border-bottom:1px solid #ddd;margin:0 0 20px 0;"></div>
 
-          <!-- Group 1: Booking Details -->
+          <!-- 1. BOOKING DETAILS -->
           <div style="margin-bottom:20px;">
             <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:center"><strong>Booking Details</strong></h4>
             <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
-              <div><strong>Status:</strong> ${data.reservationStatus || ''}</div>
-              <div><strong>Booking Date:</strong> ${data.bookingDate || ''}</div>
-              <div><strong>Number of Days:</strong> ${data.numberOfDays || ''}</div>
-              <div><strong>Pickup Date:</strong> ${data.pickupDate || ''}</div>
-              <div><strong>Pickup Time:</strong> ${data.pickupTime || ''}</div>
-              <div><strong>Pickup Location:</strong> ${data.pickupLocation || ''}</div>
-              <div><strong>Dropoff Date:</strong> ${data.dropoffDate || ''}</div>
-              <div><strong>Dropoff Time:</strong> ${data.dropoffTime || ''}</div>
-              <div><strong>Dropoff Location:</strong> ${data.dropoffLocation || ''}</div>
-              <div><strong>Total Cost:</strong> ${data.totalCost || ''}</div>
-              <div><strong>Total Amount:</strong> ${data.totalAmount || ''}</div>
-              <div><strong>Balance Due:</strong> ${data.totalBalanceDue || ''}</div>
-              <div><strong>Where did you know about us:</strong> ${data.whereDidYouKnow || ''}</div>
+              <div><strong>Status:</strong> ${data.reservationStatus || '—'}</div>
+              <div><strong>Pipeline Stage:</strong> ${pipelineStageName}</div>
+              <div><strong>Booking Date:</strong> ${data.bookingDate || '—'}</div>
+              <div><strong>Number of Days:</strong> ${data.numberOfDays || '—'}</div>
+              <div><strong>Pickup Date:</strong> ${data.pickupDate || '—'}</div>
+              <div><strong>Pickup Time:</strong> ${data.pickupTime || '—'}</div>
+              <div><strong>Pickup Location:</strong> ${data.pickupLocation || '—'}</div>
+              <div><strong>Dropoff Date:</strong> ${data.dropoffDate || '—'}</div>
+              <div><strong>Dropoff Time:</strong> ${data.dropoffTime || '—'}</div>
+              <div><strong>Dropoff Location:</strong> ${data.dropoffLocation || '—'}</div>
+              <div><strong>Total Cost:</strong> ${data.totalCost || '—'}</div>
+              <div><strong>Total Amount:</strong> ${data.totalAmount || '—'}</div>
+              <div><strong>Balance Due:</strong> ${data.totalBalanceDue || '—'}</div>
+              <div><strong>Source:</strong> ${data.source || '—'}</div>
+              <div><strong>Reference:</strong> ${data.reservationRef || '—'}</div>
+              <div><strong>Where did you know about us:</strong> ${data.whereDidYouKnow || '—'}</div>
             </div>
           </div>
           <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
 
-          <!-- Group 2: Contact Details -->
+          <!-- 2. CONTACT DETAILS -->
           <div style="margin-bottom:20px;">
             <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:center"><strong>Contact Details</strong></h4>
             <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
-              <div><strong>Reference:</strong> ${data.reservationRef || ''}</div>
-              <div><strong>Hirer Full Name:</strong> ${data.hirerFullName || ''}</div>
-              <div><strong>Email:</strong> ${data.hirerEmail || ''}</div>
-              <div><strong>Phone:</strong> ${data.hirerPhone || ''}</div>
-              <div><strong>Additional Phone:</strong> ${data.additionalPhone || ''}</div>
+              <div><strong>Hirer Full Name:</strong> ${data.hirerFullName || '—'}</div>
+              <div><strong>Email:</strong> ${data.hirerEmail || '—'}</div>
+              <div><strong>Phone:</strong> ${data.hirerPhone || '—'}</div>
+              <div><strong>Additional Phone:</strong> ${data.additionalPhone || '—'}</div>
             </div>
           </div>
           <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
 
-          <!-- Group 3: Driver's Information (always shown) -->
+          <!-- 3. DRIVER'S INFORMATION -->
           <div style="margin-bottom:20px;">
             <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:center"><strong>Driver's Information</strong></h4>
             <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
-              <div><strong>Driver's Full Name:</strong> ${data.driverName || ''}</div>
-              <div><strong>Driver's License Number:</strong> ${data.driverLicenseNumber || ''}</div>
+              <div><strong>Driver's Full Name:</strong> ${data.driverName || '—'}</div>
+              <div><strong>Driver's License Number:</strong> ${data.driverLicenseNumber || '—'}</div>
             </div>
           </div>
           <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
 
-          <!-- Group 4: Vehicle Details (always shown) -->
+          <!-- 4. VEHICLE DETAILS -->
           <div style="margin-bottom:15px;">
             <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:center"><strong>Vehicle Details</strong></h4>
             <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
-              <div><strong>Vehicle Type:</strong> ${data.vehicleCategory || ''}</div>
-              <div><strong>Vehicle Fleet Number:</strong> ${data.vehicleFleetNumber || ''}</div>
-              <div><strong>Vehicle Registration Number:</strong> ${data.vehicleRegistrationNumber || ''}</div>
+              <div><strong>Vehicle Type:</strong> ${data.vehicleCategory || '—'}</div>
+              <div><strong>Vehicle Fleet Number:</strong> ${data.vehicleFleetNumber || '—'}</div>
+              <div><strong>Vehicle Registration Number:</strong> ${data.vehicleRegistrationNumber || '—'}</div>
             </div>
           </div>
           <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
 
-          <!-- Optional: Other fields from opportunity -->
+          <!-- 5. GHL OPPORTUNITY METADATA (ALL backend fields) -->
+          <div style="margin-bottom:15px;">
+            <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:center"><strong>GHL Opportunity Metadata</strong></h4>
+            <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
+              <div><strong>Opportunity ID:</strong> ${data.opportunityId || '—'}</div>
+              <div><strong>Contact ID:</strong> ${data.contactId || '—'}</div>
+              <div><strong>Status:</strong> ${data.status || '—'}</div>
+              <div><strong>Notes:</strong> ${data.notes || '—'}</div>
+              <div><strong>Assigned To:</strong> ${data.assignedTo || '—'}</div>
+              <div><strong>Effective Probability:</strong> ${data.effectiveProbability || '—'}</div>
+              <div><strong>Created:</strong> ${data.createdAt ? new Date(data.createdAt).toLocaleDateString() : '—'}</div>
+              <div><strong>Updated:</strong> ${data.updatedAt ? new Date(data.updatedAt).toLocaleDateString() : '—'}</div>
+              <div><strong>Last Status Change:</strong> ${data.lastStatusChangeAt ? new Date(data.lastStatusChangeAt).toLocaleDateString() : '—'}</div>
+              <div><strong>Last Stage Change:</strong> ${data.lastStageChangeAt ? new Date(data.lastStageChangeAt).toLocaleDateString() : '—'}</div>
+            </div>
+          </div>
+          <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
+
+          <!-- 6. ADDITIONAL INFO (Reminders + Links) -->
           <div style="margin-bottom:15px;">
             <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:center"><strong>Additional Info</strong></h4>
             <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
-              <div><strong>Notes:</strong> ${data.notes || ''}</div>
-              <div><strong>Source:</strong> ${data.source || ''}</div>
-              <div><strong>Custom Field 1:</strong> ${data.customField1 || ''}</div>
-              <div><strong>Custom Field 2:</strong> ${data.customField2 || ''}</div>
+              <div><strong>RCM Booking Link:</strong> ${data.RCMDetailLink ? `<a href="${data.RCMDetailLink}" target="_blank">View RCM Booking</a>` : '—'}</div>
+              <div><strong>GHL Opportunity Link:</strong> ${ghlOpportunityLink ? `<a href="${ghlOpportunityLink}" target="_blank">View GHL Opportunity</a>` : '—'}</div>
+              <div><strong>Agreement Page:</strong> ${data.agreementPage ? `<a href="${data.agreementPage}" target="_blank">View Agreement</a>` : '—'}</div>
             </div>
           </div>
           <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
 
-          <p style="margin:10px 0 0 0;color:#000;font-size:16px;"><i>
-            *This view is for support only. Use with care.
-          </i></p>
-          <button onclick="
-            document.getElementById('form-section-support').style.display='block';
-            document.getElementById('loading-support').style.display='none';
-            document.getElementById('error-support').style.display='none';
-            document.getElementById('booking-details-support').style.display='none';
-            document.getElementById('booking-input-support').value='';
-            document.getElementById('lastname-input-support').value='';
-          "
-          style="margin-top:15px;width:100%;padding:12px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;font-family:'DM Sans',Arial,sans-serif;">
+          <p style="margin:10px 0 0 0;color:#000;font-size:16px;"><i>*This view is for support only. Use with care.</i></p>
+          <button onclick="location.reload();" style="margin-top:15px;width:100%;padding:12px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;font-family:'DM Sans',Arial,sans-serif;">
             Check Another Booking
           </button>
         </div>
@@ -183,15 +201,7 @@ document.getElementById('verify-btn-support').onclick = async function(e) {
           ❌ ${result.message || 'Booking not found'}
           <br><small>Contact <a href="mailto:support@wakacampa.com" style="color:#0000FF;text-decoration:underline;">support@wakacampa.com</a> if you think this is correct</small>
         </div>
-        <button onclick="
-          document.getElementById('form-section-support').style.display='block';
-          document.getElementById('error-support').style.display='none';
-          document.getElementById('booking-details-support').style.display='none';
-          document.getElementById('loading-support').style.display='none';
-          document.getElementById('booking-input-support').value='';
-          document.getElementById('lastname-input-support').value='';
-        "
-        style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;">
+        <button onclick="location.reload();" style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;">
           Check Another Booking
         </button>
       `;
@@ -204,15 +214,7 @@ document.getElementById('verify-btn-support').onclick = async function(e) {
         ❌ Connection error - try again
         <br><small>Or contact support</small>
       </div>
-      <button onclick="
-        document.getElementById('form-section-support').style.display='block';
-        document.getElementById('error-support').style.display='none';
-        document.getElementById('booking-details-support').style.display='none';
-        document.getElementById('loading-support').style.display='none';
-        document.getElementById('booking-input-support').value='';
-        document.getElementById('lastname-input-support').value='';
-      "
-      style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;">
+      <button onclick="location.reload();" style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;">
         Check Another Booking
       </button>
     `;
@@ -223,7 +225,6 @@ document.getElementById('verify-btn-support').onclick = async function(e) {
 
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
-  /* Center widget on page */
   body, html {
     margin: 0;
     padding: 20px 0;
