@@ -49,7 +49,8 @@ document.getElementById('verify-btn').onclick = async function(e) {
   try {
     const response = await fetch('https://services.leadconnectorhq.com/hooks/va82O7V3l50t4My9T2zQ/webhook-trigger/7c07440d-0a17-4225-9c97-2f1cec9e3b84/sync', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},{'Authorization':'Bearer pit-e486c7da-21bb-43a0-b7db-bfada2441c67'},
+      headers: {'Content-Type': 'application/json',
+      'Authorization':'Bearer pit-e486c7da-21bb-43a0-b7db-bfada2441c67'},
       body: JSON.stringify({bookingNum: currentBookingNum, lastName: currentLastName})
     });
 
