@@ -48,7 +48,7 @@ document.getElementById('verify-btn').onclick = async function(e) {
   document.getElementById('loading').style.display = 'block';
 
   try {
-    const response = await fetch('https://cloud.activepieces.com/api/v1/webhooks/zbSkGwrSZB90fUR3kuiOn/sync', {
+    const response = await fetch('https://cloud.activepieces.com/api/v1/webhooks/MyTJfJQDomwcryTDEduqT/sync', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({bookingNum: currentBookingNum, lastName: currentLastName})
