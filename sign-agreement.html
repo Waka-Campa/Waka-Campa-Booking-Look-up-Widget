@@ -50,7 +50,6 @@ document.getElementById('verify-btn').onclick = async function(e) {
     const response = await fetch('https://hook.us2.make.com/kjh3khqe38raww21otccu3u6y3hue3om/sync', {
       method: 'POST',
       headers: {'Content-Type': 'application/json',
-      'Authorization':'Bearer pit-e486c7da-21bb-43a0-b7db-bfada2441c67'},
       body: JSON.stringify({bookingNum: currentBookingNum, lastName: currentLastName})
     });
 
