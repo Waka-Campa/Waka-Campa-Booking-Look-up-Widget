@@ -1,7 +1,6 @@
 <div style="max-width:500px;margin:0 auto;padding:30px;background:#fff;color:#000;box-shadow:inset 0 0 10px rgba(0,0,0,0.1);font-family:'DM Sans',Arial,sans-serif;border-radius:16px;">
   <div style="text-align:center;margin-bottom:30px;">
-    <h2 style="margin:0 0 10px 0;font-size:18px;"><strong>Drive Safe Guide and Camper Van Onboarding</strong></h2>
-    <p style="margin:0;font-size:16px;">Sign your Vehicle Rental Agreement</p>
+    <h2 style="margin:0 0 10px 0;font-size:18px;"><strong>Sign your Vehicle Rental Agreement</strong></h2>
     <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
   </div>
 
@@ -23,13 +22,13 @@
   <div id="loading" style="display:none;padding:20px;text-align:center;color:#000;font-family:'DM Sans',Arial,sans-serif;">🔍 Searching Reservation....</div>
   <div id="booking-details" style="display:none;font-family:'DM Sans',Arial,sans-serif;"></div>
   <div id="confirmation-buttons" style="display:none;padding:20px;text-align:center;font-family:'DM Sans',Arial,sans-serif;"></div>
+  <div id="survey-iframe" style="display:none;width:100%;border:none;"></div>
   <div id="error" style="display:none;color:#ef4444;text-align:center;padding:20px;font-family:'DM Sans',Arial,sans-serif;"></div>
 </div>
 
 <script>
 let currentBookingNum = '';
 let currentLastName = '';
-let currentReservationRef = '';   // added
 
 document.getElementById('verify-btn').onclick = async function(e) {
   e.preventDefault();
@@ -72,4 +71,148 @@ document.getElementById('verify-btn').onclick = async function(e) {
             ❌ Booking not found
             <br><small>Contact <a href="mailto:support@wakacampa.com" style="color:#0000FF;text-decoration:underline;">support@wakacampa.com</a> if you think this is correct</small>
           </div>
-          <button onclick="resetForm()" style="ma
+          <button onclick="resetForm()" style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;">
+            Try Again
+          </button>
+        `;
+        return;
+      }
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('booking-details').style.display = 'block';
+
+      let html = `
+        <div style="background:#fff;color:#000;padding:30px;border-radius:20px;text-align:left;box-shadow:0 20px 40px rgba(0,0,0,0.2);font-family:'DM Sans',Arial,sans-serif;">
+          <h2 style="margin:0 0 20px 0;text-align:center"><strong>Booking # ${data.bookingNum || 'N/A'}</strong></h2>
+          <div style="border-bottom:1px solid #ddd;margin:0 0 20px 0;"></div>
+          
+          <div style="margin-bottom:20px;">
+            <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Booking Details</u></strong></h4>
+            <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
+              <div><strong>Status:</strong> ${data.reservationStatus || 'N/A'}</div>
+              <div><strong>Number of Days:</strong> ${data.numberOfDays || 'N/A'}</div>
+              <div><strong>Pickup Date:</strong> ${data.pickupDate || 'N/A'}</div>
+              <div><strong>Pickup Time:</strong> ${data.pickupTime || 'N/A'}</div>
+              <div><strong>Pickup Location:</strong> ${data.pickupLocation || 'N/A'}</div>
+              <div><strong>Dropoff Date:</strong> ${data.dropoffDate || 'N/A'}</div>
+              <div><strong>Dropoff Time:</strong> ${data.dropoffTime || 'N/A'}</div>
+              <div><strong>Dropoff Location:</strong> ${data.dropoffLocation || 'N/A'}</div>
+              <div><strong>Total Cost:</strong> ${data.totalCost || 'N/A'}</div>
+              <div><strong>Balance Due:</strong> ${data.totalBalanceDue || 'N/A'}</div>
+              <div><strong>Opportunity ID:</strong> ${data.opportunityId || '—'}</div>
+            </div>
+          </div>
+          <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
+          
+          <div style="margin-bottom:20px;">
+            <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Contact Details</u></strong></h4>
+            <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
+              <div><strong>Hirer Full Name:</strong> ${data.hirerFullName || 'N/A'}</div>
+              <div><strong>Email:</strong> ${data.hirerEmail || 'N/A'}</div>
+              <div><strong>Phone:</strong> ${data.hirerPhone || 'N/A'}</div>
+            `;
+
+      if (data.additionalPhone) {
+        html += `<div><strong>Additional Phone:</strong> ${data.additionalPhone}</div>`;
+      }
+
+      html += `
+            </div>
+          </div>
+          <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
+      `;
+
+      const hasDriverInfo = data.driverName || data.driverLicenseNumber;
+      if (hasDriverInfo) {
+        html += `
+          <div style="margin-bottom:20px;">
+            <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Driver's Information</u></strong></h4>
+            <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
+        `;
+
+        if (data.driverName) {
+          html += `<div><strong>Driver's Full Name:</strong> ${data.driverName}</div>`;
+        }
+        if (data.driverLicenseNumber) {
+          html += `<div><strong>Driver's License Number:</strong> ${data.driverLicenseNumber}</div>`;
+        }
+
+        html += `
+            </div>
+          </div>
+          <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
+        `;
+      }
+
+      const hasVehicleInfo = data.vehicleCategory || data.vehicleFleetNumber;
+      if (hasVehicleInfo) {
+        html += `
+          <div style="margin-bottom:15px;">
+            <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Vehicle Details</u></strong></h4>
+            <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
+        `;
+
+        if (data.vehicleCategory) {
+          html += `<div><strong>Vehicle Type:</strong> ${data.vehicleCategory}</div>`;
+        }
+        if (data.vehicleFleetNumber) {
+          html += `<div><strong>Vehicle Fleet Number:</strong> ${data.vehicleFleetNumber}</div>`;
+        }
+        html += `<div><strong>Vehicle Registration Number:</strong> N/A</div></div></div><div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>`;
+
+      }
+
+      html += `</div>`;
+
+      document.getElementById('booking-details').innerHTML = html;
+
+      // Show confirmation buttons
+      document.getElementById('confirmation-buttons').style.display = 'block';
+      document.getElementById('confirmation-buttons').innerHTML = `
+        <div style="display:flex; justify-content:center; gap:16px; margin-bottom:15px;">
+          <button id="details-correct" 
+            style="flex:1; max-width:200px; padding:12px; text-align:center; background:radial-gradient(circle 80px at 50% 70%, #22c55e, #16a34a); color:#fff; border:2px solid #fff; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; font-family:'DM Sans',Arial,sans-serif;"
+            onclick="handleDetailsCorrect()">
+            ✓ Details are correct
+          </button>
+          <button id="details-incorrect" 
+            style="flex:1; max-width:200px; padding:12px; text-align:center; background:radial-gradient(circle 80px at 50% 70%, #ef4444, #dc2626); color:#fff; border:2px solid #fff; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; font-family:'DM Sans',Arial,sans-serif;"
+            onclick="window.location.href='mailto:support@wakacampa.com?subject=Booking%20Verification%20Issue%20-%20${currentBookingNum}&body=Hi%20Support,%0A%0AI%20have%20a%20problem%20with%20booking%20#${currentBookingNum}.%0AThe%20details%20shown%20are%20incorrect.%0A%0APlease%20help.%0A%0AThanks!';">
+            ✗ Details are incorrect
+          </button>
+        </div>
+      `;
+
+    } else {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').innerHTML = `
+        <div style="font-size:18px;">
+          ❌ ${result.message || 'Booking not found'}
+          <br><small>Contact <a href="mailto:support@wakacampa.com" style="color:#0000FF;text-decoration:underline;">support@wakacampa.com</a> if you think this is correct</small>
+        </div>
+        <button onclick="resetForm()" style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;">
+          Try Again
+        </button>
+      `;
+    }
+  } catch(error) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error').style.display = 'block';
+    document.getElementById('error').innerHTML = `
+      <div style="font-size:18px;">
+        ❌ Connection error - try again
+        <br><small>Or contact support</small>
+      </div>
+      <button onclick="resetForm()" style="margin-top:15px;padding:10px 20px;background:radial-gradient( circle 80px at 50% 70%, #444, #000 );color:#fff;border:2px solid #fff;border-radius:6px;font-family:'DM Sans',Arial,sans-serif;">
+        Try Again
+      </button>
+    `;
+    console.error('Webhook error:', error);
+  }
+}
+</script>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
+</style>
