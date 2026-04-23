@@ -24,12 +24,14 @@
   <div id="booking-details" style="display:none;font-family:'DM Sans',Arial,sans-serif;"></div>
   <div id="confirmation-buttons" style="display:none;padding:20px;text-align:center;font-family:'DM Sans',Arial,sans-serif;"></div>
   <div id="survey-iframe" style="display:none;width:100%;border:none;"></div>
+  <div id="thank-you-message" style="display:none;padding:30px;text-align:center;font-family:'DM Sans',Arial,sans-serif;"></div>
   <div id="error" style="display:none;color:#ef4444;text-align:center;padding:20px;font-family:'DM Sans',Arial,sans-serif;"></div>
 </div>
 
 <script>
 let currentBookingNum = '';
 let currentLastName = '';
+let currentEmail = '';
 
 document.getElementById('verify-btn').onclick = async function(e) {
   e.preventDefault();
@@ -48,7 +50,7 @@ document.getElementById('verify-btn').onclick = async function(e) {
   document.getElementById('loading').style.display = 'block';
 
   try {
-    const response = await fetch('https://cloud.activepieces.com/api/v1/webhooks/PWGPbbTKKaJUE470aVwLy/sync', {
+    const response = await fetch('https://cloud.activepieces.com/api/v1/webhooks/tCOOvcl51zUGXBu6w6CYD/sync', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({bookingNum: currentBookingNum, lastName: currentLastName})
@@ -63,6 +65,7 @@ document.getElementById('verify-btn').onclick = async function(e) {
 
     if (result.success && result.data) {
       const data = result.data;
+      currentEmail = data.hirerEmail || data.email || '';
 
       if (!data.bookingNum || !data.lastName || data.bookingNum.trim() === "" || data.lastName.trim() === "") {
         document.getElementById('loading').style.display = 'none';
@@ -109,7 +112,7 @@ document.getElementById('verify-btn').onclick = async function(e) {
             <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Contact Details</u></strong></h4>
             <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
               <div><strong>Hirer Full Name:</strong> ${data.hirerFullName || 'N/A'}</div>
-              <div><strong>Email:</strong> ${data.hirerEmail || 'N/A'}</div>
+              <div><strong>Email:</strong> ${data.hirerEmail || data.email || 'N/A'}</div>
               <div><strong>Phone:</strong> ${data.hirerPhone || 'N/A'}</div>
             `;
 
@@ -160,7 +163,6 @@ document.getElementById('verify-btn').onclick = async function(e) {
           html += `<div><strong>Vehicle Fleet Number:</strong> ${data.vehicleFleetNumber}</div>`;
         }
         html += `<div><strong>Vehicle Registration Number:</strong> N/A</div></div></div><div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>`;
-
       }
 
       html += `</div>`;
@@ -218,8 +220,9 @@ function handleDetailsCorrect() {
   document.getElementById('booking-details').style.display = 'none';
   document.getElementById('confirmation-buttons').style.display = 'none';
 
-  // Build iframe URL with query parameters for prefill
-  const surveyUrl = `https://api.leadconnectorhq.com/widget/survey/hguGjV9kDYPzFtYLdtUI?booking_number=${encodeURIComponent(currentBookingNum)}&last_name=${encodeURIComponent(currentLastName)}`;
+  // Build iframe URL with prefilled fields and cache-buster
+  const cacheBuster = Date.now();
+  const surveyUrl = `https://api.leadconnectorhq.com/widget/survey/hguGjV9kDYPzFtYLdtUI?booking_number=${encodeURIComponent(currentBookingNum)}&email=${encodeURIComponent(currentEmail)}&last_name=${encodeURIComponent(currentLastName)}&t=${cacheBuster}`;
 
   // Load iframe
   const iframe = document.createElement('iframe');
@@ -231,17 +234,56 @@ function handleDetailsCorrect() {
   iframe.scrolling = 'no';
   iframe.id = 'hguGjV9kDYPzFtYLdtUI';
   iframe.title = 'survey';
+  iframe.onload = function() {
+    // Listen for form submission success
+    window.addEventListener('message', function(event) {
+      if (event.data && event.data.type === 'survey-submitted') {
+        // Hide iframe and show thank you
+        document.getElementById('survey-iframe').style.display = 'none';
+        showThankYouMessage();
+      }
+    });
+  };
 
   document.getElementById('survey-iframe').innerHTML = '';
   document.getElementById('survey-iframe').appendChild(iframe);
   document.getElementById('survey-iframe').style.display = 'block';
 
-  // Load LeadConnector script only once
-  if (!document.querySelector('script[src="https://link.msgsndr.com/js/form_embed.js"]')) {
+  // Load LeadConnector script with cache-buster only once
+  if (!document.querySelector('script[src*="form_embed.js"]')) {
     const script = document.createElement('script');
-    script.src = 'https://link.msgsndr.com/js/form_embed.js';
+    script.src = `https://link.msgsndr.com/js/form_embed.js?t=${cacheBuster}`;
     document.head.appendChild(script);
   }
+}
+
+function showThankYouMessage() {
+  document.getElementById('survey-iframe').style.display = 'none';
+  document.getElementById('thank-you-message').style.display = 'block';
+  document.getElementById('thank-you-message').innerHTML = `
+    <div style="background:#fff;color:#000;padding:40px;border-radius:20px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.2);font-family:'DM Sans',Arial,sans-serif;">
+      <div style="font-size:48px;margin-bottom:20px;">✅</div>
+      <h2 style="margin:0 0 20px 0;font-size:24px;color:#16a34a;">Response Submitted Successfully!</h2>
+      <p style="font-size:18px;margin:0 0 30px 0;">Thank you for completing the Drive Safe Guide.</p>
+      <div style="font-size:24px;color:#666;">This window will close in <span id="countdown">3</span> seconds...</div>
+    </div>
+  `;
+  
+  // Countdown and auto-close
+  let countdown = 3;
+  const countdownEl = document.getElementById('countdown');
+  const timer = setInterval(() => {
+    countdown--;
+    countdownEl.textContent = countdown;
+    if (countdown <= 0) {
+      clearInterval(timer);
+      window.close();
+      // Fallback if window.close doesn't work
+      setTimeout(() => {
+        window.location.href = 'about:blank';
+      }, 500);
+    }
+  }, 1000);
 }
 
 function resetForm() {
@@ -250,9 +292,11 @@ function resetForm() {
   document.getElementById('booking-details').style.display = 'none';
   document.getElementById('confirmation-buttons').style.display = 'none';
   document.getElementById('survey-iframe').style.display = 'none';
+  document.getElementById('thank-you-message').style.display = 'none';
   document.getElementById('loading').style.display = 'none';
   currentBookingNum = '';
   currentLastName = '';
+  currentEmail = '';
 }
 </script>
 
