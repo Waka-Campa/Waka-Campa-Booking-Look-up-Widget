@@ -89,8 +89,6 @@ document.getElementById('verify-btn').onclick = async function(e) {
           <div style="margin-bottom:20px;">
             <h4 style="margin:0 0 10px 0;font-size:18px;color:#000;text-align:left"><strong><u>Booking Details</u></strong></h4>
             <div style="display:grid;grid-template-columns:1fr;gap:8px;font-size:16px;text-align:left;">
-              <div><strong>Status:</strong> ${data.reservationStatus || 'N/A'}</div>
-              <div><strong>Number of Days:</strong> ${data.numberOfDays || 'N/A'}</div>
               <div><strong>Pickup Date:</strong> ${data.pickupDate || 'N/A'}</div>
               <div><strong>Pickup Time:</strong> ${data.pickupTime || 'N/A'}</div>
               <div><strong>Pickup Location:</strong> ${data.pickupLocation || 'N/A'}</div>
@@ -99,7 +97,6 @@ document.getElementById('verify-btn').onclick = async function(e) {
               <div><strong>Dropoff Location:</strong> ${data.dropoffLocation || 'N/A'}</div>
               <div><strong>Total Cost:</strong> ${data.totalCost || 'N/A'}</div>
               <div><strong>Balance Due:</strong> ${data.totalBalanceDue || 'N/A'}</div>
-              <div><strong>Opportunity ID:</strong> ${data.opportunityId || '—'}</div>
             </div>
           </div>
           <div style="border-bottom:1px solid #ddd;margin:20px 0;"></div>
@@ -173,7 +170,7 @@ document.getElementById('verify-btn').onclick = async function(e) {
           <button id="details-correct" 
             style="flex:1; max-width:200px; padding:12px; text-align:center; background:radial-gradient(circle 80px at 50% 70%, #22c55e, #16a34a); color:#fff; border:2px solid #fff; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; font-family:'DM Sans',Arial,sans-serif;"
             onclick="handleDetailsCorrect()">
-            ✓ Details are correct
+            Proceed to Pick-up Form
           </button>
           <button id="details-incorrect" 
             style="flex:1; max-width:200px; padding:12px; text-align:center; background:radial-gradient(circle 80px at 50% 70%, #ef4444, #dc2626); color:#fff; border:2px solid #fff; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; font-family:'DM Sans',Arial,sans-serif;"
