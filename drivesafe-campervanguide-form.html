@@ -234,16 +234,6 @@ function handleDetailsCorrect() {
   iframe.scrolling = 'no';
   iframe.id = 'hguGjV9kDYPzFtYLdtUI';
   iframe.title = 'survey';
-  iframe.onload = function() {
-    // Listen for form submission success
-    window.addEventListener('message', function(event) {
-      if (event.data && event.data.type === 'survey-submitted') {
-        // Hide iframe and show thank you
-        document.getElementById('survey-iframe').style.display = 'none';
-        showThankYouMessage();
-      }
-    });
-  };
 
   document.getElementById('survey-iframe').innerHTML = '';
   document.getElementById('survey-iframe').appendChild(iframe);
@@ -257,34 +247,6 @@ function handleDetailsCorrect() {
   }
 }
 
-function showThankYouMessage() {
-  document.getElementById('survey-iframe').style.display = 'none';
-  document.getElementById('thank-you-message').style.display = 'block';
-  document.getElementById('thank-you-message').innerHTML = `
-    <div style="background:#fff;color:#000;padding:40px;border-radius:20px;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,0.2);font-family:'DM Sans',Arial,sans-serif;">
-      <div style="font-size:48px;margin-bottom:20px;">✅</div>
-      <h2 style="margin:0 0 20px 0;font-size:24px;color:#16a34a;">Response Submitted Successfully!</h2>
-      <p style="font-size:18px;margin:0 0 30px 0;">Thank you for completing the Drive Safe Guide.</p>
-      <div style="font-size:24px;color:#666;">This window will close in <span id="countdown">3</span> seconds...</div>
-    </div>
-  `;
-  
-  // Countdown and auto-close
-  let countdown = 3;
-  const countdownEl = document.getElementById('countdown');
-  const timer = setInterval(() => {
-    countdown--;
-    countdownEl.textContent = countdown;
-    if (countdown <= 0) {
-      clearInterval(timer);
-      window.close();
-      // Fallback if window.close doesn't work
-      setTimeout(() => {
-        window.location.href = 'about:blank';
-      }, 500);
-    }
-  }, 1000);
-}
 
 function resetForm() {
   document.getElementById('form-section').style.display = 'block';
